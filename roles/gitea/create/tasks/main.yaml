@@ -9,6 +9,8 @@
   ansible.builtin.file:
     path: /home/{{ cloud_user}}/gitea
     state: directory
+    owner: {{ getent_passwd[cloud_user].1 }}
+    group: {{ getent_passwd[cloud_user].2 }}
     mode: '0755'
 - name: Start gitea container
   shell: |
@@ -34,7 +36,7 @@
     - gitea_password is defined
 - name: Creating nephio user in gitea
   shell: |
-    docker exec -it gitea \
+    docker exec -i gitea \
       gitea admin user create \
         --username {{ gitea_username }} \
         --password {{ gitea_password }} \
