@@ -11,21 +11,18 @@
     state: directory
     mode: '0755'
 - name: Start gitea container
-  docker_container:
-    name: gitea
-    image: gitea/gitea:1.17.3-rootless
-    networks:
-      - name: kind
-    user: "{{ getent_passwd[cloud_user].1 }}:{{ getent_passwd[cloud_user].2 }}"
-    restart: yes
-    ports:
-      - "127.0.0.1:3000:3000/tcp"
-      - "127.0.0.1:2222:2222/tcp"
-    env:
-        GITEA_APP_INI: "/var/lib/gitea/custom/conf/app.ini"
-        INSTALL_LOCK: "true"
-    volumes:
-      - /home/{{ cloud_user }}/gitea:/var/lib/gitea:rw
+  shell: |
+    docker run -d \
+       --name gitea \
+       --network kind \
+       --user {{ getent_passwd[cloud_user].1 }}:{{ getent_passwd[cloud_user].2 }} \
+       --restart always \
+       -p 127.0.0.1:3000:3000/tcp \
+       -p 127.0.0.1:2222:2222/tcp \
+       -v /home/{{ cloud_user }}/gitea:/var/lib/gitea:rw \
+       -e GITEA_APP_INI=/var/lib/gitea/custom/conf/app.ini \
+       -e INSTALL_LOCK=true \
+       gitea/gitea:1.17.3-rootless
   when:
     - gitea_username is defined
     - gitea_password is defined
