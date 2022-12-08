@@ -3,9 +3,9 @@
     name: gitea
     state: stopped
 - name: Remove gitea container
-  docker_container:
-    name: gitea
-    state: absent
+  shell: |
+    docker stop gitea
+    docker rm gitea
 - name: Recursively remove gitea directory
   ansible.builtin.file:
     path: /home/{{ cloud_user }}/gitea
