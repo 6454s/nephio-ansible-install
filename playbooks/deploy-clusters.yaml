@@ -8,4 +8,3 @@
     - { role: topo/deploy, tags: topo_deploy }
     - { role: multus, tags: multus }
     - { role: nephio/deploy, tags: nephio }
-    

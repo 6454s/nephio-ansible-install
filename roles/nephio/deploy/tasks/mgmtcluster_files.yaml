@@ -26,7 +26,7 @@
     - result.rc > 1
     - result.rc == 1 and "already exists" not in result.stderr
 
-- name: deploy nephio-webui  on mgmt cluster
+- name: deploy nephio-webui on mgmt cluster
   shell: kpt --kubeconfig ~/.kube/mgmt-config live apply nephio-webui
   args: 
     chdir: "{{ tmp_directory }}/{{ nephio.install_dir}}"
@@ -67,3 +67,37 @@
     EOF
   when:
     - gitea_username is defined
+
+- name: configure nephio ingress
+  shell: |
+    kubectl --kubeconfig ~/.kube/mgmt-config \
+      apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+- name: wait for ingress controller
+  shell: |
+    kubectl wait --kubeconfig ~/.kube/mgmt-config \
+      --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=180s
+
+- name: configure nephio ingress
+  shell: |
+    cat <<EOF | kubectl --kubeconfig ~/.kube/mgmt-config apply -f -
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: nephio-ingress
+        namespace: nephio-webui
+      spec:
+        rules:
+        - http:
+            paths:
+            - pathType: Prefix
+              path: "/"
+              backend:
+                service:
+                  name: nephio-webui
+                  port:
+                    number: 7007
+    EOF
